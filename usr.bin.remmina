@@ -1,0 +1,86 @@
+# Author: Simon Deziel		
+# Updated by .EsuS
+# vim:syntax=apparmor	
+# RDP seems to work perfectly with current file config.
+
+
+#include <tunables/global>
+
+/usr/bin/remmina {
+  #include <abstractions/audio>
+  #include <abstractions/base>
+  #include <abstractions/dbus-accessibility-strict>
+  #include <abstractions/dbus-session>
+  #include <abstractions/dbus-strict>
+  #include <abstractions/dconf>
+  #include <abstractions/gnome>
+  #include <abstractions/ibus>
+  #include <abstractions/nameservice>
+  #include <abstractions/X>
+  #include <abstractions/bash>
+  #include <abstractions/python>
+  #include <local/usr.bin.remmina>
+
+  dbus send
+      bus=system
+      path=/org/freedesktop/hostname1
+      interface=org.freedesktop.DBus.Properties
+      member=GetAll,
+
+  dbus send
+       bus=accessibility
+       path=/org/a11y/atspi/accessible/root
+       interface=org.a11y.atspi.Socket
+       member=Embed,
+
+  dbus send
+       bus=accessibility
+       path=/org/a11y/atspi/registry
+       interface=org.a11y.atspi.Registry
+       member=GetRegisteredEvents,
+
+  dbus receive
+       bus=accessibility
+       path=/org/a11y/atspi/registry
+       interface=org.a11y.atspi.Registry
+       member=EventListenerDeregistered,
+
+  dbus send
+       bus=accessibility
+       path=/org/a11y/atspi/registry/deviceeventcontroller
+       interface=org.a11y.atspi.DeviceEventController
+       member={GetKeystrokeListeners,GetDeviceEventListeners},
+
+  dbus receive
+       bus=accessibility
+       path=/org/a11y/atspi/accessible/root
+       interface=org.freedesktop.DBus.Properties
+       member=Set,
+
+  /usr/share/glib-2.0/schemas/gschemas.compiled r,
+
+  # Necessary for saved Remmina profiles 
+  owner @{HOME}/.config/freerdp/known_hosts rw,	
+
+  owner @{HOME}/.remmina/   rw,
+  owner @{HOME}/.remmina/** rw,
+  owner @{HOME}/.config/autostart/remmina-applet.desktop{,.*} rw,
+  owner @{HOME}/.config/gtk-3.0/bookmarks r,
+
+  # allow updating any DConf setting:
+  owner @{HOME}/.{cache,config}/dconf/user rw,
+  owner /{,var/}run/user/[0-9]*/dconf/user rwk,
+
+  # plugins
+  /usr/lib/@{multiarch}/remmina/plugins/*.so rm,
+
+  # external tools (works for ping.sh; nslookup.sh & traceroute.sh. Filezilla tools were not tested)
+  /usr/share/remmina/external_tools/ r,
+  /usr/share/remmina/external_tools/** rix,
+  /usr/bin/gnome-terminal rix,
+  /usr/bin/gnome-terminal.real rix,
+
+  /usr/bin/python3.5 ix,
+  /bin/dash rix,
+
+}
