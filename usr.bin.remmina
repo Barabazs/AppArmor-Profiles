@@ -79,8 +79,6 @@
   /usr/share/remmina/external_tools/** rix,
   /usr/bin/gnome-terminal rix,
   /usr/bin/gnome-terminal.real rix,
-
-  /usr/bin/python3.5 ix,
   /bin/dash rix,
 
 }
